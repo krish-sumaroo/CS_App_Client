@@ -28,15 +28,18 @@ namespace ProjetAnnotation {
     private: System::Windows::Forms::ToolStripMenuItem^ toolStripMenuItem1;
     private: System::Windows::Forms::MenuStrip^ menuStrip1;
     private: System::Windows::Forms::SplitContainer^ splitContainer1;
-    private: System::Windows::Forms::TreeView^ treeView1;
+    private: System::Windows::Forms::TreeView^ ArbreListeEntrevues;
+
+
     private: System::Windows::Forms::SplitContainer^ splitContainer2;
     private: System::Windows::Forms::ListView^ ListeUnitesHermeneutiques;
 
 
 
     private:
-        vector<Entrevue> *ListeEntrevues;
+        vector<Entrevue> *ListeEntrevues   = new vector<Entrevue>(0);
         vector<Etiquette> *ListeEtiquettes = new vector<Etiquette>(0);
+        Entrevue* EntrevueSelectionnee;
 
         string* mdp;
         bool isDragging = false;
@@ -48,6 +51,7 @@ namespace ProjetAnnotation {
         int my_y_cord;
         int indexOfItemUnderMouseToDrag;
         int indexOfItemUnderMouseToDrop;
+        ListViewItem^ ItemUnderMouseToDrop;
         System::Drawing::Rectangle dragBoxFromMouseDown;
         System::Drawing::Point screenOffset;
         System::Windows::Forms::Cursor^ MyNoDropCursor;
@@ -92,9 +96,10 @@ namespace ProjetAnnotation {
 
         void InitialiserLesDonnees() {
             ObtenirListEtiquettes(ListeEtiquettes);
-            //ObtenirListeEntrevues(ListeEntrevues );
+            ObtenirListeEntrevues(ListeEntrevues );
 
             MettreAJourListeEtiquettes();
+            MettreAJourListeEntrevues();
         }
 
         void MettreAJourListeEtiquettes() {
@@ -106,15 +111,14 @@ namespace ProjetAnnotation {
 
                 //String^ nom = gcnew String(uh.obtenirNom().c_str());
 
-                Etiquette *allo = &ListeEtiquettes->at(i);
+                
                 String^ nom = gcnew String(ListeEtiquettes->at(i).obtenirNom().c_str());
-
                 ListViewItem^ listViewItem1 = (gcnew ListViewItem(nom));
                 
-                Objet ^obj = gcnew Objet(allo);
-                //obj->etq = &uh;
+                Etiquette* allo = &ListeEtiquettes->at(i);
+                Objet<Etiquette> ^obj = gcnew Objet<Etiquette>(allo);
 
-                String^ tooltiptexte = gcnew String(obj->etq->commentaire.c_str());
+                String^ tooltiptexte = gcnew String(obj->obj->commentaire.c_str());
 
                 listViewItem1->Tag = obj;
                 listViewItem1->ToolTipText = tooltiptexte;
@@ -128,6 +132,29 @@ namespace ProjetAnnotation {
             }
         }
 
+        void MettreAJourListeEntrevues() {
+            ArbreListeEntrevues->Nodes->Clear();
+
+            TreeNode^ treeNodeRacine = (gcnew System::Windows::Forms::TreeNode(L"Liste d\'entrevues"));
+
+            for (int i = 0; i < ListeEntrevues->size(); ++i) {
+                String^ titre = gcnew String(ListeEntrevues->at(i).ObtenirTitre().c_str());
+                
+                TreeNode^ treeNode = (gcnew TreeNode(titre));
+
+                Entrevue* allo = &ListeEntrevues->at(i);
+                Objet<Entrevue>^ obj = gcnew Objet<Entrevue>(allo);
+
+                treeNode->Tag = obj;
+
+                treeNodeRacine->Nodes->Add(treeNode);
+
+                //cout << "Voici titre à ajouter" << ListeEntrevues->at(i).ObtenirTitre() << endl;
+            }
+
+            ArbreListeEntrevues->Nodes->Add(treeNodeRacine);
+            ArbreListeEntrevues->ExpandAll();
+        }
 
 
 
@@ -144,6 +171,12 @@ namespace ProjetAnnotation {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+            System::Windows::Forms::TreeNode^ treeNode1 = (gcnew System::Windows::Forms::TreeNode(L"Les bélugas"));
+            System::Windows::Forms::TreeNode^ treeNode2 = (gcnew System::Windows::Forms::TreeNode(L"Requin"));
+            System::Windows::Forms::TreeNode^ treeNode3 = (gcnew System::Windows::Forms::TreeNode(L"Liste d\'entrevues", gcnew cli::array< System::Windows::Forms::TreeNode^  >(2) {
+                treeNode1,
+                    treeNode2
+            }));
             System::Windows::Forms::ListViewItem^ listViewItem1 = (gcnew System::Windows::Forms::ListViewItem(L"Nihao"));
             System::Windows::Forms::ListViewGroup^ listViewGroup1 = (gcnew System::Windows::Forms::ListViewGroup(L"Hola", System::Windows::Forms::HorizontalAlignment::Left));
             System::Windows::Forms::ListViewItem^ listViewItem2 = (gcnew System::Windows::Forms::ListViewItem(gcnew cli::array< System::String^  >(1) { L"allo" },
@@ -154,7 +187,7 @@ namespace ProjetAnnotation {
             this->toolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
             this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
             this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
-            this->treeView1 = (gcnew System::Windows::Forms::TreeView());
+            this->ArbreListeEntrevues = (gcnew System::Windows::Forms::TreeView());
             this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
             this->splitContainer3 = (gcnew System::Windows::Forms::SplitContainer());
             this->AfficheurEntrevue = (gcnew System::Windows::Forms::RichTextBox());
@@ -203,7 +236,7 @@ namespace ProjetAnnotation {
             // 
             // splitContainer1.Panel1
             // 
-            this->splitContainer1->Panel1->Controls->Add(this->treeView1);
+            this->splitContainer1->Panel1->Controls->Add(this->ArbreListeEntrevues);
             // 
             // splitContainer1.Panel2
             // 
@@ -212,13 +245,21 @@ namespace ProjetAnnotation {
             this->splitContainer1->SplitterDistance = 251;
             this->splitContainer1->TabIndex = 1;
             // 
-            // treeView1
+            // ArbreListeEntrevues
             // 
-            this->treeView1->Dock = System::Windows::Forms::DockStyle::Fill;
-            this->treeView1->Location = System::Drawing::Point(0, 0);
-            this->treeView1->Name = L"treeView1";
-            this->treeView1->Size = System::Drawing::Size(251, 487);
-            this->treeView1->TabIndex = 0;
+            this->ArbreListeEntrevues->Dock = System::Windows::Forms::DockStyle::Fill;
+            this->ArbreListeEntrevues->Location = System::Drawing::Point(0, 0);
+            this->ArbreListeEntrevues->Name = L"ArbreListeEntrevues";
+            treeNode1->Name = L"entrevue1";
+            treeNode1->Text = L"Les bélugas";
+            treeNode2->Name = L"Requin";
+            treeNode2->Text = L"Requin";
+            treeNode3->Name = L"ListeEntrevueRacine";
+            treeNode3->Text = L"Liste d\'entrevues";
+            this->ArbreListeEntrevues->Nodes->AddRange(gcnew cli::array< System::Windows::Forms::TreeNode^  >(1) { treeNode3 });
+            this->ArbreListeEntrevues->Size = System::Drawing::Size(251, 487);
+            this->ArbreListeEntrevues->TabIndex = 0;
+            this->ArbreListeEntrevues->AfterSelect += gcnew System::Windows::Forms::TreeViewEventHandler(this, &PagePrincipal::ArbreListeEntrevues_AfterSelect);
             // 
             // splitContainer2
             // 
@@ -281,6 +322,7 @@ namespace ProjetAnnotation {
             this->ListeAnnotations->DragEnter += gcnew System::Windows::Forms::DragEventHandler(this, &PagePrincipal::ListeAnnotations_DragEnter);
             this->ListeAnnotations->DragOver += gcnew System::Windows::Forms::DragEventHandler(this, &PagePrincipal::ListeAnnotations_DragOver);
             this->ListeAnnotations->DragLeave += gcnew System::EventHandler(this, &PagePrincipal::ListeAnnotations_DragLeave);
+            this->ListeAnnotations->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &PagePrincipal::ListeAnnotations_MouseClick);
             // 
             // ListeUnitesHermeneutiques
             // 
@@ -466,7 +508,10 @@ private: System::Void ListeAnnotations_DragOver(System::Object^ sender, System::
 
     //ListViewItem^ item1 = ListeUnitesHermeneutiques->GetItemAt(e->X, e->Y);
 
+    cout << "Endroit du drop: " << e->X << ", " << e->Y << endl;
+
     try {
+        ItemUnderMouseToDrop = ListeAnnotations->GetItemAt(e->X, e->Y);
         indexOfItemUnderMouseToDrop = ListeAnnotations->GetItemAt(e->X, e->Y)->Index;
     }
     catch (...) {
@@ -495,22 +540,68 @@ private: System::Void ListeAnnotations_DragOver(System::Object^ sender, System::
 private: System::Void ListeAnnotations_DragDrop(System::Object^ sender, System::Windows::Forms::DragEventArgs^ e) {
     //cout << "Dans DragDrop" << endl;
     
+    System::Drawing::Point^ listviewPoint = ListeAnnotations->PointToClient(System::Windows::Forms::Cursor::Position);
+
     //if (e->Data->GetDataPresent(System::String::typeid)) {
-    ListViewItem^ item  = dynamic_cast<ListViewItem^>(e->Data->GetData(ListViewItem::typeid));
-    ListViewItem^ item2 = (gcnew ListViewItem(item->Text));
+    ListViewItem^ itemSource   = dynamic_cast<ListViewItem^>(e->Data->GetData(ListViewItem::typeid));
+    ListViewItem^ itemEntrevue = (gcnew ListViewItem(itemSource->Text));
+
+    itemEntrevue->Tag = itemSource->Tag;
+
+    ListViewItem^ itemDest;
+
+    itemDest = ListeAnnotations->FindNearestItem(SearchDirectionHint::Left, listviewPoint->X, listviewPoint->Y);
+    ListViewItem^ itemDest5 = ListeAnnotations->GetItemAt(listviewPoint->X, listviewPoint->Y);
+
+    if (itemDest == nullptr) {
+        itemDest = ListeAnnotations->FindNearestItem(SearchDirectionHint::Right, listviewPoint->X, listviewPoint->Y);
+    }
+    if (itemDest == nullptr) {
+        itemDest = ListeAnnotations->FindNearestItem(SearchDirectionHint::Down, listviewPoint->X, listviewPoint->Y);
+    }
+    if (itemDest == nullptr) {
+        itemDest = ListeAnnotations->FindNearestItem(SearchDirectionHint::Up, listviewPoint->X, listviewPoint->Y);
+    }
+    if (itemDest == nullptr) {
+        return;
+    }
+
+    //System::Windows::Forms::Cursor::Position = Point(0, 0);
 
     if (e->Effect == DragDropEffects::Copy ||
         e->Effect == DragDropEffects::Move) {
 
-        // Regarder s'il existe déjà
+        // Mettre le même groupe
+        itemEntrevue->Group = itemDest->Group;
+
+        // Regarder s'il existe déjà dans ce groupe
         for (int i = 0; i < ListeAnnotations->Items->Count; ++i) {
-            if (ListeAnnotations->Items[i]->Text == item2->Text) {
+            if ((ListeAnnotations->Items[i]->Text == itemEntrevue->Text) && (ListeAnnotations->Items[i]->Group == itemEntrevue->Group)) {
                 cout << "Existe déjà" << endl;
                 return;
             }
         }
 
-        ListeAnnotations->Items->Insert(indexOfItemUnderMouseToDrop, item2);
+        // Ajouter l'étiquette au bon paragraphe de l'entrevue
+        Objet<Etiquette>^ obj = dynamic_cast<Objet<Etiquette>^>(itemEntrevue->Tag);
+        Etiquette* etiquette = obj->obj;
+
+        String^ nomGroupe = itemEntrevue->Group->Name;
+
+        for (int i = 0; i < EntrevueSelectionnee->ListeParagraphes.size(); ++i) {
+            string tempNomGroup = "P " + to_string(i);
+            string tempNomPara = EntrevueSelectionnee->ListeParagraphes[i].ObtenirNom();
+
+            // Si le bon paragraphe
+            if (tempNomGroup == tempNomPara) {
+                EntrevueSelectionnee->ListeParagraphes[i].ListeEtiquettes.push_back(etiquette);
+            }
+        }
+        //EntrevueSelectionnee
+
+
+        ListeAnnotations->Items->Insert(0, itemEntrevue);
+        //ListeAnnotations->Items->Insert(indexOfItemUnderMouseToDrop, item2);
 
         // // Ajouter l'item
         // if (indexOfItemUnderMouseToDrop != ListBox::NoMatches) {
@@ -549,9 +640,9 @@ private: System::Void ListeAnnotations_DragLeave(System::Object^ sender, System:
 private: System::Void ListeUnitesHermeneutiques_MouseDoubleClick(System::Object^ sender, System::Windows::Forms::MouseEventArgs^ e) {
     ListViewItem^ item1 = ListeUnitesHermeneutiques->GetItemAt(e->X, e->Y);
 
-    Objet^ hola = dynamic_cast<Objet^>(item1->Tag);
+    Objet<Etiquette>^ hola = dynamic_cast<Objet<Etiquette>^>(item1->Tag);
     
-    Etiquette* hej = hola->etq;
+    Etiquette* hej = hola->obj;
 
     MessageBoxButtons buttons = MessageBoxButtons::YesNo;
     System::Windows::Forms::DialogResult resultat;
@@ -562,6 +653,135 @@ private: System::Void ListeUnitesHermeneutiques_MouseDoubleClick(System::Object^
 
 }
 private: System::Void Label1_Click(System::Object^ sender, System::EventArgs^ e) {
+}
+private: System::Void ArbreListeEntrevues_AfterSelect(System::Object^ sender, System::Windows::Forms::TreeViewEventArgs^ e) {
+    
+    if (e->Node->Level != 0) {
+        Objet<Entrevue>^ hola = dynamic_cast<Objet<Entrevue>^>(e->Node->Tag);
+
+        Entrevue* hej = hola->obj;
+
+        // Variable global pour l'entrevue sélectionnée
+        EntrevueSelectionnee = hej;
+
+        AfficheurEntrevue->Clear();
+        ListeAnnotations->Clear();
+
+        String^ Texte = "";
+
+        for (int i = 0; i < hej->ListeParagraphes.size(); ++i) {
+            Texte += gcnew String(hej->ListeParagraphes[i].texte.c_str());
+            Texte += "\n\n";
+
+            //ListeAnnotations
+            string   nomPar    = "Paragraphe " + to_string(i+1);
+            String ^ nomParCli = gcnew String(nomPar.c_str());
+
+            ListViewGroup^ listViewGroup1 = (gcnew ListViewGroup(nomParCli, HorizontalAlignment::Left));
+            
+
+            listViewGroup1->Header = nomParCli;
+            listViewGroup1->Name   = nomParCli;
+
+            // Ajouter un item vide pour afficher le groupe
+            //string   nomMettre = "Mettre dans " + to_string(i + 1);
+            //String^ nomMettreCli = gcnew String(nomMettre.c_str());
+            //ListViewItem^ listViewItemVide = (gcnew ListViewItem(nomMettreCli));
+            ListViewItem^ listViewItemVide = (gcnew ListViewItem(""));
+            listViewItemVide->Group = listViewGroup1;
+            ListeAnnotations->Items->Add(listViewItemVide);
+
+            // Ajouter étiquettes
+            vector<Etiquette*> ListeEtiquettes = hej->ListeParagraphes[i].ListeEtiquettes;
+
+            for (int i_e = 0; i_e < ListeEtiquettes.size(); ++i_e) {
+
+
+                // Etiquette* allo = &ListeEtiquettes->at(i);
+                // Objet<Etiquette>^ obj = gcnew Objet<Etiquette>(allo);
+                // 
+                // String^ tooltiptexte = gcnew String(obj->obj->commentaire.c_str());
+                // 
+                // listViewItem1->Tag = obj;
+                // listViewItem1->ToolTipText = tooltiptexte;
+                // 
+                // ListeUnitesHermeneutiques->Items->Add(listViewItem1);
+
+                String^ nomEtqCli = gcnew String(ListeEtiquettes[i_e]->nom.c_str());
+
+                ListViewItem^ listViewItem5 = (gcnew ListViewItem(nomEtqCli));
+
+                Etiquette* allo = ListeEtiquettes[i_e];
+                Objet<Etiquette>^ obj = gcnew Objet<Etiquette>(allo);
+
+                String^ tooltiptexte = gcnew String(obj->obj->commentaire.c_str());
+
+                listViewItem5->Tag = obj;
+                listViewItem5->Group = listViewGroup1;
+                listViewItem5->ToolTipText = tooltiptexte;
+
+                ListeAnnotations->Items->Insert(0, listViewItem5);
+            }
+            
+            // Ajouter un élément vide pour afficher le groupe
+            // ListViewItem^ listViewItem = (gcnew ListViewItem("Allo"));
+            // listViewItem->Group = listViewGroup1;
+            // ListeAnnotations->Items->Add(listViewItem);
+
+            ListeAnnotations->Groups->Add(listViewGroup1);
+
+            //ListeAnnotations->Items->Add();
+
+            // System::Windows::Forms::ListViewItem^ listViewItem2 = (gcnew System::Windows::Forms::ListViewItem(gcnew cli::array< System::String^  >(1) { L"allo" },
+            //     -1, System::Drawing::Color::Empty, System::Drawing::SystemColors::Window, nullptr));
+            // System::Windows::Forms::ListViewItem^ listViewItem3 = (gcnew System::Windows::Forms::ListViewItem(L"Hej"));
+            // System::Windows::Forms::ListViewItem^ listViewItem4 = (gcnew System::Windows::Forms::ListViewItem(L"Bonan"));
+            // System::Windows::Forms::ListViewItem^ listViewItem5 = (gcnew System::Windows::Forms::ListViewItem(L"Konnichiwa"));
+            // 
+            // listViewGroup1->Header = L"Hola";
+            // listViewGroup1->Name = L"Hola";
+            // this->ListeUnitesHermeneutiques->Groups->AddRange(gcnew cli::array< System::Windows::Forms::ListViewGroup^  >(1) { listViewGroup1 });
+            // this->ListeUnitesHermeneutiques->HideSelection = false;
+            // listViewItem2->Group = listViewGroup1;
+            // listViewItem5->Group = listViewGroup1;
+            // this->ListeUnitesHermeneutiques->Items->AddRange(gcnew cli::array< System::Windows::Forms::ListViewItem^  >(4) {
+            //     listViewItem2,
+            //         listViewItem3, listViewItem4, listViewItem5
+            // });
+            // 
+            // 
+            // System::Windows::Forms::ListViewGroup^ listViewGroup1 = (gcnew System::Windows::Forms::ListViewGroup(L"Hola", System::Windows::Forms::HorizontalAlignment::Left));
+            // System::Windows::Forms::ListViewItem^ listViewItem2 = (gcnew System::Windows::Forms::ListViewItem(gcnew cli::array< System::String^  >(1) { L"allo" },
+            //     -1, System::Drawing::Color::Empty, System::Drawing::SystemColors::Window, nullptr));
+            // System::Windows::Forms::ListViewItem^ listViewItem3 = (gcnew System::Windows::Forms::ListViewItem(L"Hej"));
+            // System::Windows::Forms::ListViewItem^ listViewItem4 = (gcnew System::Windows::Forms::ListViewItem(L"Bonan"));
+            // System::Windows::Forms::ListViewItem^ listViewItem5 = (gcnew System::Windows::Forms::ListViewItem(L"Konnichiwa"));
+            // 
+            // listViewGroup1->Header = L"Hola";
+            // listViewGroup1->Name = L"Hola";
+            // this->ListeUnitesHermeneutiques->Groups->AddRange(gcnew cli::array< System::Windows::Forms::ListViewGroup^  >(1) { listViewGroup1 });
+            // this->ListeUnitesHermeneutiques->HideSelection = false;
+            // listViewItem2->Group = listViewGroup1;
+            // listViewItem5->Group = listViewGroup1;
+            // this->ListeUnitesHermeneutiques->Items->AddRange(gcnew cli::array< System::Windows::Forms::ListViewItem^  >(4) {
+            //     listViewItem2,
+            //         listViewItem3, listViewItem4, listViewItem5
+            // });
+
+        }
+
+        ListeAnnotations->ShowGroups = true;
+        
+
+        AfficheurEntrevue->Text = Texte;
+    }
+
+
+}
+private: System::Void ListeAnnotations_MouseClick(System::Object^ sender, System::Windows::Forms::MouseEventArgs^ e) {
+    ListViewItem^ itemDest5 = ListeAnnotations->GetItemAt(e->X, e->Y);
+
+    return;
 }
 };
 }

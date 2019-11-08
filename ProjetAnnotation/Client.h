@@ -13,5 +13,6 @@ using namespace std;
 bool ConfirmerIdentifiant (string, string);
 void ObtenirListEtiquettes(vector<Etiquette>*);
 void ObtenirListeEntrevues(vector<Entrevue>*);
+void AjouterEntrevue(vector<Entrevue>*, string, vector<string>);
 
 

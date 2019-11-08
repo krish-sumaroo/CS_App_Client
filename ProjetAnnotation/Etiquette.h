@@ -34,11 +34,22 @@ public:
     //}
 };
 
+template <class T>
 public ref class Objet : Object {
 public:
-    Etiquette* etq;
+    T* obj;
 
-    Objet(Etiquette* e) : etq(e) {};
+    Objet(T* e) : obj(e) {};
     // ~Objet() = default;
 };
+
+
+// public ref class Objet : Object {
+// public:
+//     Etiquette* etq;
+// 
+//     Objet(Etiquette* e) : etq(e) {};
+//     // ~Objet() = default;
+// };
+
 
